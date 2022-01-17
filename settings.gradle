@@ -1,0 +1,4 @@
+rootProject.name = 'coding-dojo-kotlin-gradle'
+include 'Anagrams'
+include 'FizzBuzz'
+
