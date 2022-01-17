@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import sort.getTwoWordsAnagramRecursive
 
 class AnagramsTest {
 
@@ -57,6 +58,11 @@ class AnagramsTest {
     fun action_should_have_2wordsAnagrams() {
         val wordlist = WordListLoader(ACTION_WORDLIST_FILENAME).load().toList()
         "action".getTwoWordsAnagram(wordlist) shouldHaveSize 59
+    }
+    @Test
+    fun action_should_have_2wordsAnagramss() {
+        val wordlist = WordListLoader(ACTION_WORDLIST_FILENAME).load().toList()
+        "action".getTwoWordsAnagramRecursive(wordlist) shouldHaveSize 59
     }
 
     @Test

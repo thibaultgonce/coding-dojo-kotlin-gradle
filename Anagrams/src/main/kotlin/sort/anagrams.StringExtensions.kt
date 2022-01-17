@@ -9,8 +9,9 @@ fun String.isAnagram(str: String): Boolean =
         }
     } ?: false
 
-fun String.isAnagram(vararg strs: String): Boolean =
-    (this).isAnagram(strs.joinToString(""))
+fun String.isAnagram(vararg strs: String): Boolean = this.isAnagram(strs.toList())
+
+fun String.isAnagram(strList: List<String>): Boolean = this.isAnagram(strList.joinToString(""))
 
 fun String.getAnagrams(strList: List<String>): List<String> =
     strList.filter { this.isAnagram(it) }
@@ -26,6 +27,21 @@ fun String.getTwoWordsAnagram(strList: List<String>): List<Pair<String, String>>
             }
     }
 
+fun String.getTwoWordsAnagramRecursive(strList: List<String>): List<Pair<String, String>> =
+    when (strList.size) {
+        0, 1 -> emptyList()
+        2 -> Pair(strList[0], strList[1]).let { pair ->
+            if (this.isAnagram(pair.toList()))
+                listOf(pair)
+            else emptyList()
+        }
+        else -> strList.drop(1)
+            .let { droppedList ->
+                droppedList.flatMap { str ->
+                    this.getTwoWordsAnagramRecursive(listOf(strList[0], str))
+                } + this.getTwoWordsAnagramRecursive(droppedList)
+            }
+    }
 
 
 
