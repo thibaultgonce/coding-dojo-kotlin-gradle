@@ -15,20 +15,18 @@ fun String.isAnagram(vararg strs: String): Boolean =
 fun String.getAnagrams(strList: List<String>): List<String> =
     strList.filter { this.isAnagram(it) }
 
-fun String.getTwoWordsAnagram(strList: List<String>): MutableList<Pair<String, String>> {
-    val list = mutableListOf<Pair<String, String>>()
-
-    strList.forEachIndexed { index, str1 ->
-        for (i in index + 1 until strList.size) {
-            val str2 = strList[i]
-            if ((this).isAnagram(str1, str2)) {
-                list.add(Pair(str1, str2))
+fun String.getTwoWordsAnagram(strList: List<String>): List<Pair<String, String>> =
+    strList.flatMapIndexed { index, str1 ->
+        (index + 1 until strList.size)
+            .map { strList[it] }
+            .mapNotNull { str2 ->
+                takeIf {
+                    this.isAnagram(str1, str2)
+                }?.let { Pair(str1, str2) }
             }
-        }
     }
 
-    return list
-}
+
 
 
 
