@@ -1,6 +1,4 @@
-import ArgsParser.ArgsType.BOOLEAN
-import ArgsParser.ArgsType.INT
-import ArgsParser.ArgsType.STRING
+import ArgsParser.ArgsType.*
 import kotlin.reflect.KClass
 
 class ArgsParser {
@@ -22,6 +20,11 @@ class ArgsParser {
             isWrongTypeFunction = { s -> s.toIntOrNull() == null },
             defaultValue = "0"
         ),
+        FLOAT(
+            type = Float::class,
+            isWrongTypeFunction = { s -> s.toFloatOrNull() == null },
+            defaultValue = "0.0"
+        ),
         STRING(
             type = String::class,
             defaultValue = ""
@@ -32,13 +35,14 @@ class ArgsParser {
         Pair("p", INT),
         Pair("d", STRING),
         Pair("l", BOOLEAN),
+        Pair("f", FLOAT),
     )
 
     fun parse(input: String): Map<String, String> =
         input.ifBlank {
             throw Error("Input is empty. Please provide a valid input")
         }.let {
-            Regex("-([a-z])(?: (\\w+)|)")
+            Regex("-([a-z])(?: ((?:-|)[0-9]+(?:\\.[0-9]+|)|\\w+)|)")
                 .findAll(it)
                 .ifEmpty {
                     throw Error("No Args found. Please provide an input with valid args")

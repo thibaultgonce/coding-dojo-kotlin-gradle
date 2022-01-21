@@ -72,6 +72,29 @@ class ArgParserTest {
     }
 
     @Test
+    fun `should return -2 and default args when input is '-p -2' `() {
+        val input = "-p -2"
+
+        argsParser.parse(input).asClue {
+            it.getValue("p") shouldBe "-2"
+            it.getValue("l") shouldBe "false"
+            it.getValue("d") shouldBe ""
+        }
+    }
+
+    @Test
+    fun `should return -2,56 and default args when input is '-f -2,56' `() {
+        val input = "-f -2.56"
+
+        argsParser.parse(input).asClue {
+            it.getValue("p") shouldBe "0"
+            it.getValue("l") shouldBe "false"
+            it.getValue("d") shouldBe ""
+            it.getValue("f") shouldBe "-2.56"
+        }
+    }
+
+    @Test
     fun `should return true and default args when input is '-l' `() {
         val input = "-l"
 
