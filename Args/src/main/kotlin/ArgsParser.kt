@@ -8,19 +8,19 @@ class ArgsParser {
     enum class ArgsType(
         val type: KClass<out Any>,
         val isWrongTypeFunction: ((String) -> Boolean)? = null,
-        val defaultValue: Any,
-        val implicitValue: Any? = null
+        val defaultValue: String,
+        val implicitValue: String? = null
     ) {
         BOOLEAN(
             type = Boolean::class,
             isWrongTypeFunction = { s -> s.toBooleanStrictOrNull() == null },
-            defaultValue = false,
-            implicitValue = true
+            defaultValue = "false",
+            implicitValue = "true"
         ),
         INT(
             type = Int::class,
             isWrongTypeFunction = { s -> s.toIntOrNull() == null },
-            defaultValue = 0
+            defaultValue = "0"
         ),
         STRING(
             type = String::class,
@@ -34,39 +34,36 @@ class ArgsParser {
         Pair("l", BOOLEAN),
     )
 
-    fun parse(input: String): List<Pair<String, *>> {
-        if (input.isEmpty()) {
+    fun parse(input: String): Map<String, String> =
+        input.ifBlank {
             throw Error("Input is empty. Please provide a valid input")
-        }
-
-        val values: Map<String, String> = Regex("-([a-z])(?: (\\w+)|)")
-            .findAll(input).toList()
-            .ifEmpty {
-                throw Error("No Args found. Please provide an input with valid args")
-            }.map {
-                it.groupValues
-            }.associate { (_, arg, value) ->
-                val argType =
-                    schema[arg] ?: throw Error("Unknown arg -${arg}. Please use proper args from: ${schema.keys}")
-                if (value.isBlank()) {
-                    if (argType.implicitValue == null) {
-                        throw Error("Missing value of type ${argType.type.simpleName} for arg -${arg}")
+        }.let {
+            Regex("-([a-z])(?: (\\w+)|)")
+                .findAll(it)
+                .ifEmpty {
+                    throw Error("No Args found. Please provide an input with valid args")
+                }.map { matchResult ->
+                    matchResult.groupValues
+                }.mapNotNull { (_, arg, value) ->
+                    schema[arg]?.let { argType ->
+                        Triple(arg, value, argType)
                     }
-                    Pair(arg, argType.implicitValue.toString())
-                } else {
-                    if (isWrongType(value, argType)) {
+                }.onEach { (arg, value, argType) ->
+                    if (value.isNotBlank() && argType.isWrong(value)) {
                         throw Error("Wrong value type provided for arg ${arg}. Use value of ${argType.type.simpleName} type")
                     }
-                    Pair(arg, value)
+                }.associate { (arg, value, argType) ->
+                    Pair(arg, value.ifBlank {
+                        argType.implicitValue
+                            ?: throw Error("Missing value of type ${argType.type.simpleName} for arg -${arg}")
+                    })
+                }.withDefault { arg ->
+                    schema[arg]?.defaultValue
+                        ?: throw Error("Unknown arg -${arg}. Please use proper args from: ${schema.keys}")
                 }
-            }
-
-        return schema.map { (arg, argType) ->
-            values[arg]?.let { Pair(arg, it) }
-                ?: Pair(arg, argType.defaultValue.toString())
         }
-    }
 
-    fun isWrongType(value: String, argType: ArgsType): Boolean =
-        argType.isWrongTypeFunction?.invoke(value) ?: false
+
+    fun ArgsType.isWrong(value: String): Boolean =
+        this.isWrongTypeFunction?.invoke(value) ?: false
 }
