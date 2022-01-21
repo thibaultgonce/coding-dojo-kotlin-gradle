@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 class ArgParserTest {
 
-    private val argsParser = ArgsParser()
+    private val argsParser = ArgsParser(listOf("l", "p#", "f##", "d*"))
 
     @Test
     fun `should return Error when empty input`() {
@@ -55,7 +55,7 @@ class ArgParserTest {
     fun `should return Error when input contains unknown arg`() {
         val input = "-x"
 
-        shouldThrowMessage("Unknown arg -x. Please use proper args from: [p, d, l]") {
+        shouldThrowMessage("Unknown arg -x. Please use proper args from: [l, p, f, d]") {
             argsParser.parse(input).getValue("x")
         }
     }
