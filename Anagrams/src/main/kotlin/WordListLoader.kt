@@ -16,7 +16,3 @@ class WordListLoader(
         const val ACTION_WORDLIST_FILENAME: String = "src/main/resources/action-anagram-wordlist.txt"
     }
 }
-
-
-
-

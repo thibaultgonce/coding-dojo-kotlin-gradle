@@ -14,6 +14,3 @@ private fun String.myIsAnagram(str: String) =
             } && this.length == str.length
         }
     } ?: false
-
-
-

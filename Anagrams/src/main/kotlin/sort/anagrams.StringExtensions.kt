@@ -42,7 +42,3 @@ fun String.getTwoWordsAnagramRecursive(strList: List<String>): List<Pair<String,
                 } + this.getTwoWordsAnagramRecursive(droppedList)
             }
     }
-
-
-
-

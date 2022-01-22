@@ -1,14 +1,14 @@
 import WordListLoader.Companion.ACTION_WORDLIST_FILENAME
 import WordListLoader.Companion.WORDLIST_FILENAME
-import sort.getAnagrams
-import sort.getTwoWordsAnagram
-import sort.isAnagram
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import sort.getAnagrams
+import sort.getTwoWordsAnagram
 import sort.getTwoWordsAnagramRecursive
+import sort.isAnagram
 
 class AnagramsTest {
 
@@ -46,12 +46,12 @@ class AnagramsTest {
 
     @Test
     fun action_should_be_2wordsAnagrams_with_a_and_tonic() {
-        "action".isAnagram("a","tonic") shouldBe true
+        "action".isAnagram("a", "tonic") shouldBe true
     }
 
     @Test
     fun action_should_not_be_2wordsAnagrams_with_at_and_tonic() {
-        "action".isAnagram("at","tonic") shouldBe false
+        "action".isAnagram("at", "tonic") shouldBe false
     }
 
     @Test

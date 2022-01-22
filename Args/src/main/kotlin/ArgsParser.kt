@@ -1,86 +1,68 @@
-import ArgsParser.Companion.ArgsType.BOOLEAN
-import ArgsParser.Companion.ArgsType.FLOAT
-import ArgsParser.Companion.ArgsType.INT
-import ArgsParser.Companion.ArgsType.STRING
-import kotlin.reflect.KClass
+import ArgType.Companion.ArgsType.BOOLEAN
+import ArgType.Companion.ArgsType.DOUBLE
+import ArgType.Companion.ArgsType.INT
+import ArgType.Companion.ArgsType.STRING
 
 class ArgsParser(
     schema: List<String>
 ) {
     companion object {
-        private enum class ArgsType(
-            val type: KClass<out Any>,
-            val isWrongTypeFunction: ((String) -> Boolean)? = null,
-            val defaultValue: String,
-            val implicitValue: String? = null
-        ) {
-            BOOLEAN(
-                type = Boolean::class,
-                isWrongTypeFunction = { s -> s.toBooleanStrictOrNull() == null },
-                defaultValue = "false",
-                implicitValue = "true"
-            ),
-            INT(
-                type = Int::class,
-                isWrongTypeFunction = { s -> s.toIntOrNull() == null },
-                defaultValue = "0"
-            ),
-            FLOAT(
-                type = Float::class,
-                isWrongTypeFunction = { s -> s.toFloatOrNull() == null },
-                defaultValue = "0.0"
-            ),
-            STRING(
-                type = String::class,
-                defaultValue = ""
-            );
 
-            fun isWrong(value: String): Boolean =
-                this.isWrongTypeFunction?.invoke(value) ?: false
-        }
-
-        private val argTypesMap: HashMap<String, ArgsType> = hashMapOf(
+        private val argTypesMap: HashMap<String, ArgType.Companion.ArgsType> = hashMapOf(
             Pair("", BOOLEAN),
             Pair("#", INT),
-            Pair("##", FLOAT),
+            Pair("##", DOUBLE),
             Pair("*", STRING),
         )
     }
 
-    private val validatedSchema: Map<String, ArgsType> = schema.associate {
+    private val validatedSchema: Map<String, ArgType<*>> = schema.associate {
         val arg: Char = it[0]
         val schemaEncoded = it.drop(1).trim()
-        val argType: ArgsType = argTypesMap[schemaEncoded]
+        val argType: ArgType<*> = argTypesMap[schemaEncoded]?.argType
             ?: throw Error("Invalid type for provided schema")
         Pair(arg.toString(), argType)
     }
 
-    fun parse(input: String): Map<String, String> =
+    fun parse(input: String): Map<String, Any> =
         input.ifBlank {
             throw Error("Input is empty. Please provide a valid input")
-        }.let {
-            Regex("-([a-z])(?: ((?:-|)[0-9]+(?:\\.[0-9]+|)|\\w+)|)")
-                .findAll(it)
+        }.let { notBlankInput ->
+            Regex("-([a-z])(?: ((?:-\\d|)(?:[^\\s-]+|))|)")
+                .findAll(notBlankInput)
                 .ifEmpty {
                     throw Error("No Args found. Please provide an input with valid args")
                 }.map { matchResult ->
                     matchResult.groupValues
-                }.mapNotNull { (_, arg, value) ->
+                }.mapNotNull { (_, arg, values) ->
                     validatedSchema[arg]?.let { argType ->
-                        Triple(arg, value, argType)
+                        Triple(arg, values.split(","), argType)
                     }
-                }.onEach { (arg, value, argType) ->
-                    if (value.isNotBlank() && argType.isWrong(value)) {
-                        throw Error("Wrong value type provided for arg ${arg}. Use value of ${argType.type.simpleName} type")
+                }.map { (arg, stringValues, argType) ->
+                    (
+                        argType.takeIf {
+                            it.parseFunction != null
+                        }?.let {
+                            stringValues.map { s ->
+                                s.takeIf(String::isNotBlank)
+                                    ?.let {
+                                        argType.parse(s)
+                                            ?: throw Error("Wrong value type provided for arg $arg. Use value of ${argType.classT.simpleName} type")
+                                    }
+                            }
+                        } ?: stringValues
+                        ).let { valuesParsed -> Triple(arg, valuesParsed, argType) }
+                }.associate { (arg, values, argType) ->
+                    arg to values.map { v ->
+                        v
+                            ?: argType.implicitValue
+                            ?: throw Error("Missing value of type ${argType.classT.simpleName} for arg -$arg")
+                    }.let {
+                        if (it.size == 1) it.first() else it
                     }
-                }.associate { (arg, value, argType) ->
-                    Pair(arg, value.ifBlank {
-                        argType.implicitValue
-                            ?: throw Error("Missing value of type ${argType.type.simpleName} for arg -${arg}")
-                    })
                 }.withDefault { arg ->
                     validatedSchema[arg]?.defaultValue
-                        ?: throw Error("Unknown arg -${arg}. Please use proper args from: ${validatedSchema.keys}")
+                        ?: throw Error("Unknown arg -$arg. Please use proper args from: ${validatedSchema.keys}")
                 }
         }
 }

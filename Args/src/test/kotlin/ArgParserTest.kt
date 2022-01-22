@@ -28,7 +28,7 @@ class ArgParserTest {
     fun `should return Error when wrong type - input contains Boolean value for Int arg type`() {
         val input = "-p true"
 
-        shouldThrowMessage("Wrong value type provided for arg p. Use value of Int type") {
+        shouldThrowMessage("Wrong value type provided for arg p. Use value of int type") {
             argsParser.parse(input)
         }
     }
@@ -37,7 +37,7 @@ class ArgParserTest {
     fun `should return Error when wrong type - input contains Int value for Boolean arg type`() {
         val input = "-l 123"
 
-        shouldThrowMessage("Wrong value type provided for arg l. Use value of Boolean type") {
+        shouldThrowMessage("Wrong value type provided for arg l. Use value of boolean type") {
             argsParser.parse(input)
         }
     }
@@ -46,7 +46,7 @@ class ArgParserTest {
     fun `should return Error when missing value for non-implicite arg type`() {
         val input = "-p"
 
-        shouldThrowMessage("Missing value of type Int for arg -p") {
+        shouldThrowMessage("Missing value of type int for arg -p") {
             argsParser.parse(input)
         }
     }
@@ -65,8 +65,8 @@ class ArgParserTest {
         val input = "-p 8080"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "8080"
-            it.getValue("l") shouldBe "false"
+            it.getValue("p") shouldBe 8080
+            it.getValue("l") shouldBe false
             it.getValue("d") shouldBe ""
         }
     }
@@ -76,8 +76,8 @@ class ArgParserTest {
         val input = "-p -2"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "-2"
-            it.getValue("l") shouldBe "false"
+            it.getValue("p") shouldBe -2
+            it.getValue("l") shouldBe false
             it.getValue("d") shouldBe ""
         }
     }
@@ -87,10 +87,10 @@ class ArgParserTest {
         val input = "-f -2.56"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "0"
-            it.getValue("l") shouldBe "false"
+            it.getValue("p") shouldBe 0
+            it.getValue("l") shouldBe false
             it.getValue("d") shouldBe ""
-            it.getValue("f") shouldBe "-2.56"
+            it.getValue("f") shouldBe -2.56
         }
     }
 
@@ -99,8 +99,8 @@ class ArgParserTest {
         val input = "-l"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "0"
-            it.getValue("l") shouldBe "true"
+            it.getValue("p") shouldBe 0
+            it.getValue("l") shouldBe true
             it.getValue("d") shouldBe ""
         }
     }
@@ -110,8 +110,8 @@ class ArgParserTest {
         val input = "-d value"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "0"
-            it.getValue("l") shouldBe "false"
+            it.getValue("p") shouldBe 0
+            it.getValue("l") shouldBe false
             it.getValue("d") shouldBe "value"
         }
     }
@@ -121,8 +121,8 @@ class ArgParserTest {
         val input = "-p 8080 -d value"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "8080"
-            it.getValue("l") shouldBe "false"
+            it.getValue("p") shouldBe 8080
+            it.getValue("l") shouldBe false
             it.getValue("d") shouldBe "value"
         }
     }
@@ -132,9 +132,20 @@ class ArgParserTest {
         val input = "-l -p 8080 -d value"
 
         argsParser.parse(input).asClue {
-            it.getValue("p") shouldBe "8080"
-            it.getValue("l") shouldBe "true"
+            it.getValue("p") shouldBe 8080
+            it.getValue("l") shouldBe true
             it.getValue("d") shouldBe "value"
+        }
+    }
+
+    @Test
+    fun `should return all values including list ones when input has several args `() {
+        val input = "-l -p 8080,86 -d value1,value2,value3"
+
+        argsParser.parse(input).asClue {
+            it.getValue("p") shouldBe listOf(8080, 86)
+            it.getValue("l") shouldBe true
+            it.getValue("d") shouldBe listOf("value1", "value2", "value3")
         }
     }
 }
