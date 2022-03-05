@@ -1,27 +1,58 @@
+import java.io.File
+
 class Ocr {
-    private val lineLength = 28
-    private val endOfLine1Index = lineLength - 1
-    private val endOfLine2Index = 2 * (lineLength - 1)
+    private val lineLength = 27
+    private val ocrNumberPartSize = 3
 
-    private fun String.substring3Chars(startIndex: Int) = this.substring(startIndex, startIndex + 3)
+    private val line1EndIndex = lineLength
+    private val line2EndIndex = 2 * (lineLength)
 
-    fun parse(entry: String): List<Int?> = entry
+    private fun String.substringOcrNumberPart(startIndex: Int) =
+        this.substring(startIndex, startIndex + ocrNumberPartSize)
+
+    fun parse(entry: String): List<Int> = entry
         .replace(Regex("[\n\r]"), "")
-        .takeIf {
-            it.length % 9 == 0
-        }?.let { str ->
-            (0 until 27 step 3)
-                .map { index ->
-                    val s1 = str.substring3Chars(index)
-                    val s2 = str.substring3Chars(endOfLine1Index + index)
-
-                    if (str.length == 81) {
-                        val s3 = str.substring3Chars(endOfLine2Index + index)
-                        OcrNumber.fromStrings(s1, s2, s3)
-                    } else {
-                        OcrNumber.fromStrings(s1, s2)
-                    }
+        .let { str ->
+            when (str.length) {
+                54 -> (0 until lineLength step ocrNumberPartSize).map { index ->
+                    OcrNumber.fromStrings(
+                        mid = str.substringOcrNumberPart(index),
+                        bottom = str.substringOcrNumberPart(line1EndIndex + index)
+                    )
                 }
+                81 -> (0 until lineLength step ocrNumberPartSize).map { index ->
+                    OcrNumber.fromStrings(
+                        top = str.substringOcrNumberPart(index),
+                        mid = str.substringOcrNumberPart(line1EndIndex + index),
+                        bottom = str.substringOcrNumberPart(line2EndIndex + index)
+                    )
+                }
+                else -> error("Wrong entry. Please provide a valid entry")
+            }
         }
-        ?: error("Wrong entry. Please provide a valid entry")
+
+    private fun List<Int>.isValidChecksum(): Boolean =
+        this.reduceIndexed { index, acc, i -> i * index + acc }
+            .mod(11) == 0
+
+    private fun List<Int>.format(): String = 
+        this.joinToString("")
+            .replace("-1", "?")
+
+    fun parse(file: File): List<String> =
+        file.useLines { seq ->
+            seq.chunked(4)
+                .map { fourLines ->
+                    val parsedEntry = parse(
+                        entry = fourLines.joinToString("")
+                    )
+                    parsedEntry.format().let {
+                        if (parsedEntry.contains(-1)) {
+                            "$it ILL"
+                        } else if (!parsedEntry.isValidChecksum()) {
+                            "$it ERR"
+                        } else it
+                    }
+                }.toList()
+        }
 }

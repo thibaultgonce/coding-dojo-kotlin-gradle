@@ -63,25 +63,20 @@ enum class OcrNumber(val i: Int, val l1: String, val l2: String, val l3: String)
     companion object {
         private val OCR_NUMBER_WITHOUT_TOP = arrayOf(ONE, FOUR)
 
-        private fun OcrNumber.compare(l1: String, l2: String, l3: String): Boolean =
-            this.l1 == l1 && this.l2 == l2 && this.l3 == l3
+        private fun OcrNumber.compare(top: String, mid: String, bottom: String): Boolean =
+            this.l1 == top && this.l2 == mid && this.l3 == bottom
 
-        private fun OcrNumber.compare(l2: String, l3: String): Boolean =
-            this.l2 == l2 && this.l3 == l3
-        
-        fun fromStrings(l1: String, l2: String, l3: String): Int? =
+        private fun OcrNumber.compare(mid: String, bottom: String): Boolean =
+            this.l2 == mid && this.l3 == bottom
+
+        fun fromStrings(top: String, mid: String, bottom: String): Int =
             values().find {
-                it.compare(l1, l2, l3)
-            }?.i
+                it.compare(top, mid, bottom)
+            }?.i ?: -1
 
-        fun fromStrings(l2: String, l3: String): Int? =
+        fun fromStrings(mid: String, bottom: String): Int =
             OCR_NUMBER_WITHOUT_TOP.find {
-                it.compare(l2, l3)
-            }?.i
+                it.compare(mid, bottom)
+            }?.i ?: -1
     }
-
-
 }
-
-
-
